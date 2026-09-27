@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><title>한길 긴 4코 늘려뜨기(한 코에서·사이에 사슬 1코)</title>
+<line x1="50" y1="90" x2="10.68" y2="62.47" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="5.52" y1="69.84" x2="15.84" y2="55.1" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="22.2" y1="76.88" x2="34.55" y2="72.83" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="50" y1="90" x2="32.02" y2="45.5" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="23.67" y1="48.87" x2="40.36" y2="42.12" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="33.83" y1="63.85" x2="46.39" y2="67.19" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="50" y1="90" x2="67.98" y2="45.5" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="59.64" y1="42.12" x2="76.33" y2="48.87" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="56.53" y1="59.96" x2="63.25" y2="71.09" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="50" y1="90" x2="89.32" y2="62.47" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="84.16" y1="55.1" x2="94.48" y2="69.84" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="71.84" y1="68.36" x2="71.41" y2="81.35" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="50" cy="45" rx="5.5" ry="3.4" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

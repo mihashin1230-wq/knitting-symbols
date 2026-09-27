@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><title>두길 긴 5코 구슬뜨기(한 코에서)</title>
+<path d="M50,90 Q20,57 50,24" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="31.16" y1="56.87" x2="38.84" y2="62.63" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="31.16" y1="51.37" x2="38.84" y2="57.13" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M50,90 Q35,57 50,24" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="38.66" y1="56.87" x2="46.34" y2="62.63" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="38.66" y1="51.37" x2="46.34" y2="57.13" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M50,90 Q50,57 50,24" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="46.16" y1="56.87" x2="53.84" y2="62.63" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="46.16" y1="51.37" x2="53.84" y2="57.13" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M50,90 Q65,57 50,24" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="53.66" y1="56.87" x2="61.34" y2="62.63" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="53.66" y1="51.37" x2="61.34" y2="57.13" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M50,90 Q80,57 50,24" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="61.16" y1="56.87" x2="68.84" y2="62.63" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="61.16" y1="51.37" x2="68.84" y2="57.13" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="41" y1="24" x2="59" y2="24" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><title>빼뜨기의 피코뜨기(한길 긴뜨기에서)</title>
+<line x1="50" y1="92" x2="50" y2="52" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="41" y1="52" x2="59" y2="52" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="44.8" y1="60.1" x2="55.2" y2="67.9" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="39.07" cy="43.97" rx="7.21" ry="3.6" transform="rotate(-137.47 39.07 43.97)" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="38.8" cy="31.01" rx="7.21" ry="3.6" transform="rotate(-9.38 38.8 31.01)" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="50.62" cy="40.95" rx="7.21" ry="3.6" transform="rotate(60.54 50.62 40.95)" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="50" cy="47" rx="4" ry="2.6" fill="#1a1a1a" stroke="none"/>
+</svg>
