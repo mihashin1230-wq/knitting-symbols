@@ -1,0 +1,317 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+#dm{--dm-line:#d9d9d9;--dm-soft:#f5f5f5;--dm-ink:#222;--dm-accent:#2f6df6;font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;color:var(--dm-ink);max-width:1120px;margin:0 auto;padding:12px}
+#dm *{box-sizing:border-box}
+#dm button,#dm select,#dm input{font:inherit;color:inherit}
+#dm .dm-layout{display:grid;grid-template-columns:330px 1fr;gap:16px;align-items:start}
+#dm .dm-pal{border:1px solid var(--dm-line);border-radius:10px;padding:10px;background:#fff}
+#dm .dm-tabs{display:flex;gap:6px;margin-bottom:8px}
+#dm .dm-tab{flex:1;padding:8px 0;border:1px solid var(--dm-line);border-radius:8px;background:#fff;cursor:pointer}
+#dm .dm-tab.on{background:var(--dm-ink);color:#fff;border-color:var(--dm-ink)}
+#dm .dm-filters{display:flex;gap:6px;margin-bottom:8px}
+#dm .dm-filters select,#dm .dm-filters input{min-width:0;flex:1;padding:7px 8px;border:1px solid var(--dm-line);border-radius:8px;background:#fff}
+#dm .dm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px;max-height:640px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#dm .dm-sym{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:1px solid var(--dm-line);border-radius:8px;background:#fff;cursor:pointer}
+#dm .dm-sym:hover,#dm .dm-sym:active{border-color:var(--dm-accent);background:#f3f7ff}
+#dm .dm-sym img{width:44px;height:44px;display:block}
+#dm .dm-sym span{font-size:10px;line-height:1.2;text-align:center;word-break:keep-all;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#dm .dm-empty{grid-column:1/-1;padding:24px 0;text-align:center;color:#888;font-size:13px}
+#dm .dm-toolbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+#dm .dm-btn{padding:7px 10px;border:1px solid var(--dm-line);border-radius:8px;background:#fff;cursor:pointer;font-size:13px}
+#dm .dm-btn:disabled{opacity:.35;cursor:default}
+#dm .dm-btn.main{background:var(--dm-ink);color:#fff;border-color:var(--dm-ink);margin-left:auto}
+#dm .dm-chk{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:0 4px}
+#dm .dm-wrap{width:100%;position:relative;overflow:auto;border:1px solid var(--dm-line);border-radius:10px;background:#fff}
+#dm .dm-stage{position:absolute;left:0;top:0;transform-origin:0 0}
+#dm .dm-stage.grid{background-image:linear-gradient(#e4e4e4 1px,transparent 1px),linear-gradient(90deg,#e4e4e4 1px,transparent 1px);background-size:60px 60px}
+#dm .dm-item{position:absolute;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#dm .dm-item img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+#dm .dm-item.sel{outline:2px dashed var(--dm-accent);outline-offset:2px}
+#dm .dm-rot-handle{display:none;position:absolute;left:50%;top:-28px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--dm-accent);border:2px solid #fff;box-shadow:0 0 0 1px var(--dm-accent);cursor:grab;touch-action:none}
+#dm .dm-rot-handle::before{content:'';position:absolute;left:50%;top:100%;width:2px;height:14px;margin-left:-1px;background:var(--dm-accent)}
+#dm .dm-item.sel .dm-rot-handle{display:block}
+#dm .dm-angle{position:absolute;pointer-events:none;background:var(--dm-ink);color:#fff;font-size:11px;padding:2px 6px;border-radius:10px;transform:translate(-50%,-130%);white-space:nowrap}
+#dm .dm-hint{margin:8px 2px 0;font-size:12px;color:#777}
+@media(max-width:800px){
+  #dm .dm-layout{grid-template-columns:1fr}
+  #dm .dm-stage-col{order:-1}
+  #dm .dm-grid{max-height:38vh}
+  #dm .dm-btn.main{margin-left:0;width:100%}
+}
+</style>
+
+<div id="dm">
+  <div class="dm-layout">
+    <section class="dm-pal">
+      <div class="dm-tabs" id="dmTabs"></div>
+      <div class="dm-filters">
+        <select id="dmCat" aria-label="분류"></select>
+        <input id="dmQ" type="search" placeholder="기호 검색" aria-label="기호 검색">
+      </div>
+      <div class="dm-grid" id="dmGrid"></div>
+    </section>
+    <section class="dm-stage-col">
+      <div class="dm-toolbar">
+        <button class="dm-btn" id="dmRotL" disabled>&#8634; 15°</button>
+        <button class="dm-btn" id="dmRotR" disabled>&#8635; 15°</button>
+        <button class="dm-btn" id="dmRot90" disabled>90° 회전</button>
+        <button class="dm-btn" id="dmSmall" disabled>작게 &minus;</button>
+        <button class="dm-btn" id="dmBig" disabled>크게 +</button>
+        <button class="dm-btn" id="dmDup" disabled>복제</button>
+        <button class="dm-btn" id="dmDel" disabled>삭제</button>
+        <span class="dm-chk">가로<input type="number" id="dmW" value="10" min="2" max="120" style="width:56px;padding:6px 4px;border:1px solid var(--dm-line);border-radius:6px">칸</span>
+        <span class="dm-chk">세로<input type="number" id="dmH" value="10" min="2" max="120" style="width:56px;padding:6px 4px;border:1px solid var(--dm-line);border-radius:6px">칸</span>
+        <button class="dm-btn" id="dmSizeApply">칸 수 적용</button>
+        <label class="dm-chk"><input type="checkbox" id="dmSnap" checked>격자에 맞춤</label>
+        <label class="dm-chk"><input type="checkbox" id="dmGridShow" checked>격자 표시</label>
+        <button class="dm-btn" id="dmClear">전체 지우기</button>
+        <button class="dm-btn main" id="dmSave">이미지로 저장</button>
+      </div>
+      <div class="dm-toolbar">
+        <button class="dm-btn" id="dmZoomOut">화면 축소 &minus;</button>
+        <span class="dm-chk" id="dmZoomPct">100%</span>
+        <button class="dm-btn" id="dmZoomIn">화면 확대 +</button>
+        <button class="dm-btn" id="dmZoomFit">화면 맞춤</button>
+      </div>
+      <div class="dm-wrap" id="dmWrap"><div class="dm-stage grid" id="dmStage"></div></div>
+      <p class="dm-hint">기호를 누르면 도안에 추가됩니다. 끌어서 옮기고, 선택하면 위에 파란 손잡이가 생겨요 &mdash; 손잡이를 끌면 원하는 각도로 자유롭게 돌릴 수 있습니다 (Shift를 누른 채 돌리면 15&deg;씩 딱딱 맞춰집니다). 위 버튼으로도 회전·크기 조절이 됩니다.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STAGE_W=600, STAGE_H=600, CELL=60, DEF=60;
+  var DATA=[{"name":"대바늘","items":[{"c":"기본기호","n":"겉뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/01_%EA%B8%B0%EB%B3%B8%EA%B8%B0%ED%98%B8/01_%EA%B2%89%EB%9C%A8%EA%B8%B0.svg"},{"c":"기본기호","n":"안뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/01_%EA%B8%B0%EB%B3%B8%EA%B8%B0%ED%98%B8/02_%EC%95%88%EB%9C%A8%EA%B8%B0.svg"},{"c":"기본기호","n":"걸기코(바늘비우기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/01_%EA%B8%B0%EB%B3%B8%EA%B8%B0%ED%98%B8/03_%EA%B1%B8%EA%B8%B0%EC%BD%94%28%EB%B0%94%EB%8A%98%EB%B9%84%EC%9A%B0%EA%B8%B0%29.svg"},{"c":"기본기호","n":"덮어씌우기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/01_%EA%B8%B0%EB%B3%B8%EA%B8%B0%ED%98%B8/04_%EB%8D%AE%EC%96%B4%EC%94%8C%EC%9A%B0%EA%B8%B0.svg"},{"c":"기본기호","n":"안뜨기의 덮어씌우기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/01_%EA%B8%B0%EB%B3%B8%EA%B8%B0%ED%98%B8/05_%EC%95%88%EB%9C%A8%EA%B8%B0%EC%9D%98_%EB%8D%AE%EC%96%B4%EC%94%8C%EC%9A%B0%EA%B8%B0.svg"},{"c":"기본기호","n":"돌려뜨기(꼬아뜨기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/01_%EA%B8%B0%EB%B3%B8%EA%B8%B0%ED%98%B8/06_%EB%8F%8C%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EA%BC%AC%EC%95%84%EB%9C%A8%EA%B8%B0%29.svg"},{"c":"모아뜨기","n":"오른코 겹쳐 2코 모아뜨기(오른코 겹치기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/01_%EC%98%A4%EB%A5%B8%EC%BD%94_%EA%B2%B9%EC%B3%90_2%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0%28%EC%98%A4%EB%A5%B8%EC%BD%94_%EA%B2%B9%EC%B9%98%EA%B8%B0%29.svg"},{"c":"모아뜨기","n":"왼코 겹쳐 2코 모아뜨기(왼코 겹치기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/02_%EC%99%BC%EC%BD%94_%EA%B2%B9%EC%B3%90_2%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0%28%EC%99%BC%EC%BD%94_%EA%B2%B9%EC%B9%98%EA%B8%B0%29.svg"},{"c":"모아뜨기","n":"돌려 안뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03_%EB%8F%8C%EB%A0%A4_%EC%95%88%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"오른코 겹쳐 2코 모아 안뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/04_%EC%98%A4%EB%A5%B8%EC%BD%94_%EA%B2%B9%EC%B3%90_2%EC%BD%94_%EB%AA%A8%EC%95%84_%EC%95%88%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"왼코 겹쳐 2코 모아 안뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/05_%EC%99%BC%EC%BD%94_%EA%B2%B9%EC%B3%90_2%EC%BD%94_%EB%AA%A8%EC%95%84_%EC%95%88%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"중심 3코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/06_%EC%A4%91%EC%8B%AC_3%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"오른코 겹쳐 3코 모아뜨기(오른코 중심 3코 모아뜨기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/07_%EC%98%A4%EB%A5%B8%EC%BD%94_%EA%B2%B9%EC%B3%90_3%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0%28%EC%98%A4%EB%A5%B8%EC%BD%94_%EC%A4%91%EC%8B%AC_3%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0%29.svg"},{"c":"모아뜨기","n":"왼코 겹쳐 3코 모아뜨기(왼코 중심 3코 모아뜨기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/08_%EC%99%BC%EC%BD%94_%EA%B2%B9%EC%B3%90_3%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0%28%EC%99%BC%EC%BD%94_%EC%A4%91%EC%8B%AC_3%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0%29.svg"},{"c":"모아뜨기","n":"오른코 겹쳐 3코 모아 안뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/10_%EC%98%A4%EB%A5%B8%EC%BD%94_%EA%B2%B9%EC%B3%90_3%EC%BD%94_%EB%AA%A8%EC%95%84_%EC%95%88%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"왼코 겹쳐 3코 모아 안뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/11_%EC%99%BC%EC%BD%94_%EA%B2%B9%EC%B3%90_3%EC%BD%94_%EB%AA%A8%EC%95%84_%EC%95%88%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"오른코 겹쳐 4코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/12_%EC%98%A4%EB%A5%B8%EC%BD%94_%EA%B2%B9%EC%B3%90_4%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"왼코 겹쳐 4코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/daebanul/02_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/13_%EC%99%BC%EC%BD%94_%EA%B2%B9%EC%B3%90_4%EC%BD%94_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"}]},{"name":"코바늘","items":[{"c":"기본뜨개기법","n":"사슬뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/01_%EA%B8%B0%EB%B3%B8%EB%9C%A8%EA%B0%9C%EA%B8%B0%EB%B2%95/01-01_%EC%82%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0.svg"},{"c":"기본뜨개기법","n":"짧은뜨기(+)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/01_%EA%B8%B0%EB%B3%B8%EB%9C%A8%EA%B0%9C%EA%B8%B0%EB%B2%95/01-02_%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%28%2B%29.svg"},{"c":"기본뜨개기법","n":"짧은뜨기(×)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/01_%EA%B8%B0%EB%B3%B8%EB%9C%A8%EA%B0%9C%EA%B8%B0%EB%B2%95/01-03_%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%28%C3%97%29.svg"},{"c":"기본뜨개기법","n":"한길 긴뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/01_%EA%B8%B0%EB%B3%B8%EB%9C%A8%EA%B0%9C%EA%B8%B0%EB%B2%95/01-04_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"기본뜨개기법","n":"긴뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/01_%EA%B8%B0%EB%B3%B8%EB%9C%A8%EA%B0%9C%EA%B8%B0%EB%B2%95/01-05_%EA%B8%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"기본뜨개기법","n":"빼뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/01_%EA%B8%B0%EB%B3%B8%EB%9C%A8%EA%B0%9C%EA%B8%B0%EB%B2%95/01-06_%EB%B9%BC%EB%9C%A8%EA%B8%B0.svg"},{"c":"늘려뜨기","n":"짧은 2코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-01_%EC%A7%A7%EC%9D%80%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"짧은 3코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-02_%EC%A7%A7%EC%9D%80%203%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"짧은 2코 늘려뜨기(한 코에서·사이에 사슬 1코)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-03_%EC%A7%A7%EC%9D%80%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%C2%B7%EC%82%AC%EC%9D%B4%EC%97%90%20%EC%82%AC%EC%8A%AC%201%EC%BD%94%29.svg"},{"c":"늘려뜨기","n":"한길 긴 2코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-04_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"한길 긴 2코 늘려뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-05_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"한길 긴 2코 늘려뜨기(한 코에서·사이에 사슬 1코)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-06_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%C2%B7%EC%82%AC%EC%9D%B4%EC%97%90%20%EC%82%AC%EC%8A%AC%201%EC%BD%94%29.svg"},{"c":"늘려뜨기","n":"한길 긴 2코 늘려뜨기(코 아래에서·사이에 사슬 1코)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-07_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%C2%B7%EC%82%AC%EC%9D%B4%EC%97%90%20%EC%82%AC%EC%8A%AC%201%EC%BD%94%29.svg"},{"c":"늘려뜨기","n":"한길 긴 3코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-08_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"한길 긴 3코 늘려뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-09_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"긴 2코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-10_%EA%B8%B4%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"긴 2코 늘려뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-11_%EA%B8%B4%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"긴 3코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-12_%EA%B8%B4%203%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"긴 3코 늘려뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-13_%EA%B8%B4%203%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"한길 긴 5코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-14_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"한길 긴 5코 늘려뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-15_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"늘려뜨기","n":"한길 긴 4코 늘려뜨기(한 코에서·사이에 사슬 1코)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-16_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%204%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%C2%B7%EC%82%AC%EC%9D%B4%EC%97%90%20%EC%82%AC%EC%8A%AC%201%EC%BD%94%29.svg"},{"c":"늘려뜨기","n":"한길 긴 4코 늘려뜨기(코 아래에서·사이에 사슬 1코)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/02_%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0/02-17_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%204%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%C2%B7%EC%82%AC%EC%9D%B4%EC%97%90%20%EC%82%AC%EC%8A%AC%201%EC%BD%94%29.svg"},{"c":"모아뜨기","n":"짧은 2코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-01_%EC%A7%A7%EC%9D%80%202%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"짧은 3코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-02_%EC%A7%A7%EC%9D%80%203%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"짧은 2코 모아뜨기(가운데 1코 건너뛰기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-03_%EC%A7%A7%EC%9D%80%202%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0%28%EA%B0%80%EC%9A%B4%EB%8D%B0%201%EC%BD%94%20%EA%B1%B4%EB%84%88%EB%9B%B0%EA%B8%B0%29.svg"},{"c":"모아뜨기","n":"한길 긴 2코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-04_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%202%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"한길 긴 3코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-05_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"긴 2코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-06_%EA%B8%B4%202%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"긴 3코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-07_%EA%B8%B4%203%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"한길 긴 4코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-08_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%204%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"모아뜨기","n":"한길 긴 5코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/03_%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0/03-09_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"구슬뜨기","n":"한길 긴 3코 구슬뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-01_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"구슬뜨기","n":"한길 긴 3코 구슬뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-02_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"구슬뜨기","n":"긴 3코 구슬뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-03_%EA%B8%B4%203%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"구슬뜨기","n":"긴 3코 구슬뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-04_%EA%B8%B4%203%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"구슬뜨기","n":"긴 3코 변형 구슬뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-05_%EA%B8%B4%203%EC%BD%94%20%EB%B3%80%ED%98%95%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"구슬뜨기","n":"긴 3코 변형 구슬뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-06_%EA%B8%B4%203%EC%BD%94%20%EB%B3%80%ED%98%95%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"구슬뜨기","n":"한길 긴 2코 구슬뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-07_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%202%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0.svg"},{"c":"구슬뜨기","n":"긴 2코 구슬뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-08_%EA%B8%B4%202%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0.svg"},{"c":"구슬뜨기","n":"긴 2코 변형 구슬뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-09_%EA%B8%B4%202%EC%BD%94%20%EB%B3%80%ED%98%95%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0.svg"},{"c":"구슬뜨기","n":"한길 긴 5코 구슬뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-10_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"구슬뜨기","n":"한길 긴 5코 구슬뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/04_%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/04-11_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"피코뜨기","n":"피코뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/05_%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0/05-01_%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0.svg"},{"c":"피코뜨기","n":"짧은 피코뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/05_%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0/05-02_%EC%A7%A7%EC%9D%80%20%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0.svg"},{"c":"피코뜨기","n":"빼뜨기의 피코뜨기(짧은뜨기에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/05_%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0/05-03_%EB%B9%BC%EB%9C%A8%EA%B8%B0%EC%9D%98%20%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0%28%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%97%90%EC%84%9C%29.svg"},{"c":"피코뜨기","n":"빼뜨기의 피코뜨기(한길 긴뜨기에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/05_%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0/05-04_%EB%B9%BC%EB%9C%A8%EA%B8%B0%EC%9D%98%20%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0%28%ED%95%9C%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0%EC%97%90%EC%84%9C%29.svg"},{"c":"피코뜨기","n":"빼뜨기의 피코뜨기(사슬뜨기에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/05_%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0/05-05_%EB%B9%BC%EB%9C%A8%EA%B8%B0%EC%9D%98%20%ED%94%BC%EC%BD%94%EB%9C%A8%EA%B8%B0%28%EC%82%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%EC%97%90%EC%84%9C%29.svg"},{"c":"응용기법(길 긴뜨기)","n":"두길 긴뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/06_%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95%28%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0%29/06-01_%EB%91%90%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"응용기법(길 긴뜨기)","n":"세길 긴뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/06_%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95%28%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0%29/06-02_%EC%84%B8%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"응용기법(길 긴뜨기)","n":"네길 긴뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/06_%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95%28%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0%29/06-03_%EB%84%A4%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"응용기법(길 긴뜨기)","n":"감아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/06_%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95%28%EA%B8%B8%20%EA%B8%B4%EB%9C%A8%EA%B8%B0%29/06-04_%EA%B0%90%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"이랑뜨기","n":"짧은 이랑뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/07_%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0/07-01_%EC%A7%A7%EC%9D%80%20%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0.svg"},{"c":"이랑뜨기","n":"짧은 이랑뜨기(왕복뜨기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/07_%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0/07-02_%EC%A7%A7%EC%9D%80%20%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0%28%EC%99%95%EB%B3%B5%EB%9C%A8%EA%B8%B0%29.svg"},{"c":"이랑뜨기","n":"짧은 이랑뜨기(원형뜨기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/07_%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0/07-03_%EC%A7%A7%EC%9D%80%20%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0%28%EC%9B%90%ED%98%95%EB%9C%A8%EA%B8%B0%29.svg"},{"c":"이랑뜨기","n":"긴 이랑뜨기(원형뜨기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/07_%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0/07-04_%EA%B8%B4%20%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0%28%EC%9B%90%ED%98%95%EB%9C%A8%EA%B8%B0%29.svg"},{"c":"이랑뜨기","n":"한길 긴 이랑뜨기(원형뜨기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/07_%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0/07-05_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%20%EC%9D%B4%EB%9E%91%EB%9C%A8%EA%B8%B0%28%EC%9B%90%ED%98%95%EB%9C%A8%EA%B8%B0%29.svg"},{"c":"걸어뜨기","n":"짧은 앞걸어뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-01_%EC%A7%A7%EC%9D%80%20%EC%95%9E%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"걸어뜨기","n":"짧은 뒤걸어뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-02_%EC%A7%A7%EC%9D%80%20%EB%92%A4%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"걸어뜨기","n":"긴 앞걸어뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-03_%EA%B8%B4%20%EC%95%9E%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"걸어뜨기","n":"긴 뒤걸어뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-04_%EA%B8%B4%20%EB%92%A4%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"걸어뜨기","n":"한길 긴 앞걸어뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-05_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%20%EC%95%9E%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"걸어뜨기","n":"한길 긴 뒤걸어뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-06_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%20%EB%92%A4%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0.svg"},{"c":"걸어뜨기","n":"한길 긴 앞걸어 1코 교차뜨기(사이에 사슬 1코)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-07_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%20%EC%95%9E%EA%B1%B8%EC%96%B4%201%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0%28%EC%82%AC%EC%9D%B4%EC%97%90%20%EC%82%AC%EC%8A%AC%201%EC%BD%94%29.svg"},{"c":"걸어뜨기","n":"한길 긴 앞걸어 2코 늘려뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/08_%EA%B1%B8%EC%96%B4%EB%9C%A8%EA%B8%B0/08-08_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%20%EC%95%9E%EA%B1%B8%EC%96%B4%202%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"짧은뜨기의 응용기법","n":"되돌아 짧은뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/09_%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95/09-01_%EB%90%98%EB%8F%8C%EC%95%84%20%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0.svg"},{"c":"짧은뜨기의 응용기법","n":"변형 되돌아 짧은뜨기(반코 줍기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/09_%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95/09-02_%EB%B3%80%ED%98%95%20%EB%90%98%EB%8F%8C%EC%95%84%20%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%28%EB%B0%98%EC%BD%94%20%EC%A4%8D%EA%B8%B0%29.svg"},{"c":"짧은뜨기의 응용기법","n":"변형 되돌아 짧은뜨기(한 코 줍기)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/09_%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95/09-03_%EB%B3%80%ED%98%95%20%EB%90%98%EB%8F%8C%EC%95%84%20%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%20%EC%A4%8D%EA%B8%B0%29.svg"},{"c":"짧은뜨기의 응용기법","n":"바늘 돌려서 짧은뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/09_%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95/09-04_%EB%B0%94%EB%8A%98%20%EB%8F%8C%EB%A0%A4%EC%84%9C%20%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0.svg"},{"c":"짧은뜨기의 응용기법","n":"실 돌려서 짧은뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/09_%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EC%9D%91%EC%9A%A9%EA%B8%B0%EB%B2%95/09-05_%EC%8B%A4%20%EB%8F%8C%EB%A0%A4%EC%84%9C%20%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0.svg"},{"c":"팝콘뜨기·구슬뜨기","n":"한길 긴 5코 팝콘뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/10_%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%C2%B7%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/10-01_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"팝콘뜨기·구슬뜨기","n":"한길 긴 5코 팝콘뜨기(코 아래에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/10_%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%C2%B7%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/10-02_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%28%EC%BD%94%20%EC%95%84%EB%9E%98%EC%97%90%EC%84%9C%29.svg"},{"c":"팝콘뜨기·구슬뜨기","n":"긴 5코 팝콘뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/10_%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%C2%B7%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/10-03_%EA%B8%B4%205%EC%BD%94%20%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"팝콘뜨기·구슬뜨기","n":"두길 긴 5코 구슬뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/10_%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%C2%B7%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/10-04_%EB%91%90%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"팝콘뜨기·구슬뜨기","n":"두길 긴 5코 팝콘뜨기(한 코에서)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/10_%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%C2%B7%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/10-05_%EB%91%90%EA%B8%B8%20%EA%B8%B4%205%EC%BD%94%20%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%28%ED%95%9C%20%EC%BD%94%EC%97%90%EC%84%9C%29.svg"},{"c":"팝콘뜨기·구슬뜨기","n":"한길 긴 3코 구슬 2코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/10_%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%C2%B7%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/10-06_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EA%B5%AC%EC%8A%AC%202%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"팝콘뜨기·구슬뜨기","n":"긴 3코 구슬 2코 모아뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/10_%ED%8C%9D%EC%BD%98%EB%9C%A8%EA%B8%B0%C2%B7%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0/10-07_%EA%B8%B4%203%EC%BD%94%20%EA%B5%AC%EC%8A%AC%202%EC%BD%94%20%EB%AA%A8%EC%95%84%EB%9C%A8%EA%B8%B0.svg"},{"c":"교차뜨기","n":"한길 긴 1코 교차뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-01_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%201%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0.svg"},{"c":"교차뜨기","n":"한길 긴 1코 교차뜨기(사이에 사슬 1코)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-02_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%201%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0%28%EC%82%AC%EC%9D%B4%EC%97%90%20%EC%82%AC%EC%8A%AC%201%EC%BD%94%29.svg"},{"c":"교차뜨기","n":"긴 1코 교차뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-03_%EA%B8%B4%201%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0.svg"},{"c":"교차뜨기","n":"두길 긴 1코 교차뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-04_%EB%91%90%EA%B8%B8%20%EA%B8%B4%201%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0.svg"},{"c":"교차뜨기","n":"변형 한길 긴 1코 교차뜨기(오른코 뒤)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-05_%EB%B3%80%ED%98%95%20%ED%95%9C%EA%B8%B8%20%EA%B8%B4%201%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0%28%EC%98%A4%EB%A5%B8%EC%BD%94%20%EB%92%A4%29.svg"},{"c":"교차뜨기","n":"변형 한길 긴 1코 교차뜨기(왼코 뒤)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-06_%EB%B3%80%ED%98%95%20%ED%95%9C%EA%B8%B8%20%EA%B8%B4%201%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0%28%EC%99%BC%EC%BD%94%20%EB%92%A4%29.svg"},{"c":"교차뜨기","n":"변형 한길 긴 1코와 3코 교차뜨기(오른코 뒤)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-07_%EB%B3%80%ED%98%95%20%ED%95%9C%EA%B8%B8%20%EA%B8%B4%201%EC%BD%94%EC%99%80%203%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0%28%EC%98%A4%EB%A5%B8%EC%BD%94%20%EB%92%A4%29.svg"},{"c":"교차뜨기","n":"변형 한길 긴 1코와 3코 교차뜨기(왼코 뒤)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/11_%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0/11-08_%EB%B3%80%ED%98%95%20%ED%95%9C%EA%B8%B8%20%EA%B8%B4%201%EC%BD%94%EC%99%80%203%EC%BD%94%20%EA%B5%90%EC%B0%A8%EB%9C%A8%EA%B8%B0%28%EC%99%BC%EC%BD%94%20%EB%92%A4%29.svg"},{"c":"X자뜨기·Y자뜨기","n":"한길 긴 X자뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/12_X%EC%9E%90%EB%9C%A8%EA%B8%B0%C2%B7Y%EC%9E%90%EB%9C%A8%EA%B8%B0/12-01_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%20X%EC%9E%90%EB%9C%A8%EA%B8%B0.svg"},{"c":"X자뜨기·Y자뜨기","n":"두길 긴 X자뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/12_X%EC%9E%90%EB%9C%A8%EA%B8%B0%C2%B7Y%EC%9E%90%EB%9C%A8%EA%B8%B0/12-02_%EB%91%90%EA%B8%B8%20%EA%B8%B4%20X%EC%9E%90%EB%9C%A8%EA%B8%B0.svg"},{"c":"X자뜨기·Y자뜨기","n":"Y자뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/12_X%EC%9E%90%EB%9C%A8%EA%B8%B0%C2%B7Y%EC%9E%90%EB%9C%A8%EA%B8%B0/12-03_Y%EC%9E%90%EB%9C%A8%EA%B8%B0.svg"},{"c":"X자뜨기·Y자뜨기","n":"역Y자뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/12_X%EC%9E%90%EB%9C%A8%EA%B8%B0%C2%B7Y%EC%9E%90%EB%9C%A8%EA%B8%B0/12-04_%EC%97%ADY%EC%9E%90%EB%9C%A8%EA%B8%B0.svg"},{"c":"장식뜨기","n":"한길 긴 3코 늘려뜨기(짧은뜨기와 같은 코에)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/13_%EC%9E%A5%EC%8B%9D%EB%9C%A8%EA%B8%B0/13-01_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%99%80%20%EA%B0%99%EC%9D%80%20%EC%BD%94%EC%97%90%29.svg"},{"c":"장식뜨기","n":"한길 긴 3코 늘려뜨기(짧은뜨기의 다리에)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/13_%EC%9E%A5%EC%8B%9D%EB%9C%A8%EA%B8%B0/13-02_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%203%EC%BD%94%20%EB%8A%98%EB%A0%A4%EB%9C%A8%EA%B8%B0%28%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EB%8B%A4%EB%A6%AC%EC%97%90%29.svg"},{"c":"장식뜨기","n":"한길 긴 2코 구슬뜨기(짧은뜨기의 다리에)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/13_%EC%9E%A5%EC%8B%9D%EB%9C%A8%EA%B8%B0/13-03_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%202%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EB%8B%A4%EB%A6%AC%EC%97%90%29.svg"},{"c":"장식뜨기","n":"긴 3코 구슬뜨기(짧은뜨기의 다리에)","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/13_%EC%9E%A5%EC%8B%9D%EB%9C%A8%EA%B8%B0/13-04_%EA%B8%B4%203%EC%BD%94%20%EA%B5%AC%EC%8A%AC%EB%9C%A8%EA%B8%B0%28%EC%A7%A7%EC%9D%80%EB%9C%A8%EA%B8%B0%EC%9D%98%20%EB%8B%A4%EB%A6%AC%EC%97%90%29.svg"},{"c":"기타","n":"짧은 링뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/14_%EA%B8%B0%ED%83%80/14-01_%EC%A7%A7%EC%9D%80%20%EB%A7%81%EB%9C%A8%EA%B8%B0.svg"},{"c":"기타","n":"한길 긴 링뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/14_%EA%B8%B0%ED%83%80/14-02_%ED%95%9C%EA%B8%B8%20%EA%B8%B4%20%EB%A7%81%EB%9C%A8%EA%B8%B0.svg"},{"c":"기타","n":"칠보뜨기","u":"https://cdn.jsdelivr.net/gh/mihashin1230-wq/knitting-symbols@main/kobanul/14_%EA%B8%B0%ED%83%80/14-03_%EC%B9%A0%EB%B3%B4%EB%9C%A8%EA%B8%B0.svg"}]}];
+  var $=function(id){return document.getElementById(id)};
+  var stage=$('dmStage'), wrap=$('dmWrap'), grid=$('dmGrid');
+  var items=[], els={}, uid=0, zTop=0, selId=null, last=null, scale=1, drag=null;
+  var gi=0, cat='', q='';
+
+  function urlOf(u){return u}
+
+  /* palette */
+  function renderTabs(){
+    var t=$('dmTabs'); t.innerHTML='';
+    DATA.forEach(function(g,i){
+      var b=document.createElement('button');
+      b.className='dm-tab'+(i===gi?' on':''); b.textContent=g.name+' ('+g.items.length+')';
+      b.onclick=function(){gi=i;cat='';q=$('dmQ').value='';renderTabs();renderCats();renderGrid()};
+      t.appendChild(b);
+    });
+  }
+  function renderCats(){
+    var s=$('dmCat'), cats=[];
+    DATA[gi].items.forEach(function(x){if(cats.indexOf(x.c)<0)cats.push(x.c)});
+    s.innerHTML='<option value="">전체 분류</option>'+cats.map(function(c){return '<option>'+c+'</option>'}).join('');
+    s.value=cat;
+  }
+  function renderGrid(){
+    grid.innerHTML='';
+    var list=DATA[gi].items.filter(function(x){return (!cat||x.c===cat)&&(!q||x.n.indexOf(q)>=0)});
+    if(!list.length){grid.innerHTML='<div class="dm-empty">기호가 없습니다</div>';return}
+    var f=document.createDocumentFragment();
+    list.forEach(function(s){
+      var b=document.createElement('button'); b.className='dm-sym'; b.title=s.n; b.type='button';
+      var im=new Image(); im.alt=''; im.crossOrigin='anonymous'; im.src=urlOf(s.u);
+      var sp=document.createElement('span'); sp.textContent=s.n;
+      b.appendChild(im); b.appendChild(sp);
+      b.onclick=function(){addItem(s)};
+      f.appendChild(b);
+    });
+    grid.appendChild(f);
+  }
+  $('dmCat').onchange=function(){cat=this.value;renderGrid()};
+  $('dmQ').oninput=function(){q=this.value.trim();renderGrid()};
+
+  /* items */
+  function find(id){for(var i=0;i<items.length;i++)if(items[i].id===id)return items[i]}
+  function draw(it){
+    var el=els[it.id];
+    if(!el){
+      el=document.createElement('div'); el.className='dm-item'; el.setAttribute('data-id',it.id);
+      var im=new Image(); im.alt=it.name; im.draggable=false; im.src=it.src; el.appendChild(im);
+      var h=document.createElement('div'); h.className='dm-rot-handle'; el.appendChild(h);
+      stage.appendChild(el); els[it.id]=el;
+    }
+    el.style.width=el.style.height=it.size+'px';
+    el.style.left=(it.x-it.size/2)+'px'; el.style.top=(it.y-it.size/2)+'px';
+    el.style.transform='rotate('+it.rot+'deg)'; el.style.zIndex=it.z;
+    el.className='dm-item'+(it.id===selId?' sel':'');
+  }
+  function addItem(s){
+    var x=CELL/2, y=CELL/2;
+    if(last){
+      x=last.x+CELL; y=last.y;
+      if(x>STAGE_W-CELL/2){x=CELL/2;y=last.y+CELL}
+      if(y>STAGE_H-CELL/2){y=CELL/2}
+    }
+    var it={id:++uid,src:urlOf(s.u),name:s.n,x:x,y:y,size:DEF,rot:0,z:++zTop};
+    items.push(it); last={x:x,y:y}; select(it.id); draw(it);
+  }
+  function select(id){
+    var old=selId; selId=id;
+    if(old&&find(old))draw(find(old));
+    if(id&&find(id))draw(find(id));
+    ['dmRotL','dmRotR','dmRot90','dmSmall','dmBig','dmDup','dmDel'].forEach(function(b){$(b).disabled=!id});
+  }
+  function withSel(fn){var it=find(selId); if(it){fn(it);draw(it)}}
+  $('dmRotL').onclick=function(){withSel(function(i){i.rot=(i.rot-15)%360})};
+  $('dmRotR').onclick=function(){withSel(function(i){i.rot=(i.rot+15)%360})};
+  $('dmRot90').onclick=function(){withSel(function(i){i.rot=(i.rot+90)%360})};
+  $('dmSmall').onclick=function(){withSel(function(i){i.size=Math.max(20,i.size-10)})};
+  $('dmBig').onclick=function(){withSel(function(i){i.size=Math.min(300,i.size+10)})};
+  $('dmDup').onclick=function(){
+    var s=find(selId); if(!s)return;
+    var c={id:++uid,src:s.src,name:s.name,x:Math.min(STAGE_W-CELL/2,s.x+CELL),y:s.y,size:s.size,rot:s.rot,z:++zTop};
+    items.push(c); last={x:c.x,y:c.y}; select(c.id); draw(c);
+  };
+  function del(){
+    var it=find(selId); if(!it)return;
+    stage.removeChild(els[it.id]); delete els[it.id];
+    items.splice(items.indexOf(it),1); select(null);
+  }
+  $('dmDel').onclick=del;
+  $('dmClear').onclick=function(){
+    if(items.length&&!confirm('도안을 모두 지울까요?'))return;
+    stage.innerHTML=''; items=[]; els={}; last=null; select(null);
+  };
+  $('dmGridShow').onchange=function(){stage.className='dm-stage'+(this.checked?' grid':'')};
+  document.addEventListener('keydown',function(e){
+    if(!selId||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();del()}
+  });
+
+  /* drag */
+  var rotDrag=null, angleTag=null;
+  function pt(e){var r=stage.getBoundingClientRect();return{x:(e.clientX-r.left)/scale,y:(e.clientY-r.top)/scale}}
+  function showAngle(it){
+    if(!angleTag){angleTag=document.createElement('div');angleTag.className='dm-angle';stage.appendChild(angleTag)}
+    angleTag.style.left=it.x+'px'; angleTag.style.top=(it.y-it.size/2)+'px';
+    var deg=Math.round(it.rot)%360; if(deg<0)deg+=360;
+    angleTag.textContent=deg+'°';
+  }
+  function hideAngle(){if(angleTag){stage.removeChild(angleTag);angleTag=null}}
+  stage.addEventListener('pointerdown',function(e){
+    var handle=e.target.closest('.dm-rot-handle');
+    if(handle){
+      var el=handle.closest('.dm-item'); var it=find(+el.getAttribute('data-id')); if(!it)return;
+      it.z=++zTop; select(it.id);
+      rotDrag={id:it.id}; showAngle(it);
+      stage.setPointerCapture(e.pointerId);
+      return;
+    }
+    var el2=e.target.closest('.dm-item');
+    if(!el2){select(null);return}
+    var it2=find(+el2.getAttribute('data-id')); if(!it2)return;
+    it2.z=++zTop; select(it2.id);
+    var p=pt(e); drag={id:it2.id,dx:p.x-it2.x,dy:p.y-it2.y};
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove',function(e){
+    if(rotDrag){
+      var it=find(rotDrag.id); if(!it)return;
+      var p=pt(e), deg=Math.atan2(p.y-it.y,p.x-it.x)*180/Math.PI+90;
+      if(e.shiftKey)deg=Math.round(deg/15)*15;
+      it.rot=deg; draw(it); showAngle(it);
+      return;
+    }
+    if(!drag)return;
+    var it=find(drag.id), p=pt(e), x=p.x-drag.dx, y=p.y-drag.dy;
+    if($('dmSnap').checked){x=Math.round((x-CELL/2)/CELL)*CELL+CELL/2; y=Math.round((y-CELL/2)/CELL)*CELL+CELL/2}
+    it.x=Math.max(0,Math.min(STAGE_W,x)); it.y=Math.max(0,Math.min(STAGE_H,y)); draw(it);
+  });
+  function endDrag(){
+    if(drag){var it=find(drag.id); if(it)last={x:it.x,y:it.y}; drag=null}
+    if(rotDrag){rotDrag=null; hideAngle()}
+  }
+  stage.addEventListener('pointerup',endDrag);
+  stage.addEventListener('pointercancel',endDrag);
+
+  /* responsive scale + zoom */
+  var viewportEl=wrap.parentElement, zoom=1, ZMIN=0.25, ZMAX=4, ZSTEP=1.25;
+  var fitRetries=0;
+  function fit(){
+    var vw=viewportEl.clientWidth;
+    if(!vw){ if(fitRetries++<120)requestAnimationFrame(fit); return; }
+    fitRetries=0;
+    stage.style.width=STAGE_W+'px'; stage.style.height=STAGE_H+'px';
+    var baseScale=vw/STAGE_W;
+    scale=baseScale*zoom; stage.style.transform='scale('+scale+')';
+    wrap.style.height=Math.round(STAGE_H*baseScale)+'px';
+    $('dmZoomPct').textContent=Math.round(zoom*100)+'%';
+  }
+  function setZoom(z){zoom=Math.max(ZMIN,Math.min(ZMAX,z)); fit()}
+  $('dmZoomIn').onclick=function(){setZoom(zoom*ZSTEP)};
+  $('dmZoomOut').onclick=function(){setZoom(zoom/ZSTEP)};
+  $('dmZoomFit').onclick=function(){zoom=1; fit(); wrap.scrollLeft=0; wrap.scrollTop=0};
+  wrap.addEventListener('wheel',function(e){
+    if(!e.ctrlKey&&!e.metaKey)return;
+    e.preventDefault(); setZoom(zoom*(e.deltaY<0?ZSTEP:1/ZSTEP));
+  },{passive:false});
+  function applySize(){
+    var w=Math.max(2,Math.min(120,Math.round(+$('dmW').value)||10));
+    var h=Math.max(2,Math.min(120,Math.round(+$('dmH').value)||10));
+    $('dmW').value=w; $('dmH').value=h;
+    STAGE_W=w*CELL; STAGE_H=h*CELL;
+    items.forEach(function(it){it.x=Math.min(it.x,STAGE_W-CELL/2);it.y=Math.min(it.y,STAGE_H-CELL/2);draw(it)});
+    last=null; fit();
+  }
+  $('dmSizeApply').onclick=applySize;
+  [$('dmW'),$('dmH')].forEach(function(inp){inp.addEventListener('keydown',function(e){if(e.key==='Enter')applySize()})});
+  if(window.ResizeObserver)new ResizeObserver(fit).observe(viewportEl); window.addEventListener('resize',fit);
+
+  /* export */
+  var imgCache={};
+  function loadImg(src){
+    if(imgCache[src])return imgCache[src];
+    return imgCache[src]=new Promise(function(ok,no){
+      var im=new Image(); im.crossOrigin='anonymous';
+      im.onload=function(){ok(im)}; im.onerror=function(){delete imgCache[src];no(new Error(src))};
+      im.src=src;
+    });
+  }
+  $('dmSave').onclick=function(){
+    if(!items.length){alert('먼저 기호를 추가해 주세요.');return}
+    var K=3, PAD=30, minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    items.forEach(function(it){
+      var a=it.rot*Math.PI/180, r=it.size/2*(Math.abs(Math.cos(a))+Math.abs(Math.sin(a)));
+      minX=Math.min(minX,it.x-r);maxX=Math.max(maxX,it.x+r);minY=Math.min(minY,it.y-r);maxY=Math.max(maxY,it.y+r);
+    });
+    minX-=PAD;minY-=PAD;maxX+=PAD;maxY+=PAD;
+    Promise.all(items.map(function(it){return loadImg(it.src)})).then(function(ims){
+      var pairs=items.map(function(it,i){return{it:it,im:ims[i]}}).sort(function(a,b){return a.it.z-b.it.z});
+      var cv=document.createElement('canvas'); cv.width=Math.round((maxX-minX)*K); cv.height=Math.round((maxY-minY)*K);
+      var c=cv.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,cv.width,cv.height);
+      c.setTransform(K,0,0,K,-minX*K,-minY*K);
+      if($('dmGridShow').checked){
+        c.strokeStyle='#e4e4e4'; c.lineWidth=1/K*1.5; c.beginPath();
+        for(var gx=Math.ceil(minX/CELL)*CELL;gx<=maxX;gx+=CELL){c.moveTo(gx,minY);c.lineTo(gx,maxY)}
+        for(var gy=Math.ceil(minY/CELL)*CELL;gy<=maxY;gy+=CELL){c.moveTo(minX,gy);c.lineTo(maxX,gy)}
+        c.stroke();
+      }
+      pairs.forEach(function(p){
+        var it=p.it;
+        c.save(); c.translate(it.x,it.y); c.rotate(it.rot*Math.PI/180);
+        c.drawImage(p.im,-it.size/2,-it.size/2,it.size,it.size);
+        c.restore();
+      });
+      cv.toBlob(function(b){
+        var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='도안.png';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+      },'image/png');
+    }).catch(function(){alert('이미지를 저장하지 못했습니다. 기호 이미지 서버가 다른 사이트에서의 사용을 허용하지 않는 경우일 수 있습니다.')});
+  };
+
+  renderTabs(); renderCats(); renderGrid(); fit();
+  window.addEventListener('load',fit);
+  [200,600,1200,2500].forEach(function(t){setTimeout(fit,t)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)fit()});
+  if(window.IntersectionObserver){
+    new IntersectionObserver(function(entries){
+      entries.forEach(function(e){if(e.isIntersecting)fit()});
+    }).observe(wrap);
+  }
+})();
+</script>
