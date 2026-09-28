@@ -45,6 +45,13 @@
 #dm .dm-hint{margin:8px 2px 0;font-size:12px;color:#777}
 #dm .dm-banner{display:none;align-items:center;gap:8px;background:#fff8e1;border:1px solid #f0d98c;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:13px}
 #dm .dm-banner button{margin-left:auto}
+#dm .dm-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--dm-ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:10000;opacity:0;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center}
+#dm .dm-toast.show{opacity:1;transform:translate(-50%,0)}
+#dm .dm-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:10001;padding:16px}
+#dm .dm-modal{background:#fff;border-radius:12px;padding:18px;max-width:360px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+#dm .dm-modal p{margin:0 0 12px;font-size:14px;line-height:1.5}
+#dm .dm-modal input[type=text]{width:100%;padding:8px;border:1px solid var(--dm-line);border-radius:6px;margin-bottom:12px;font-size:12px}
+#dm .dm-modal-btns{display:flex;gap:8px;justify-content:flex-end}
 @media(max-width:800px){
   #dm .dm-layout{grid-template-columns:1fr}
   #dm .dm-stage-col{order:-1}
@@ -133,6 +140,51 @@
   var items=[], els={}, uid=0, zTop=0, selId=null, last=null, scale=1, drag=null;
   var gi=0, cat='', q='';
   var cellColors={};
+
+  /* ---- custom popups (avoid native alert/confirm/prompt: inside a cross-origin iframe
+         browsers prefix them with "삽입된 페이지 내용" which looks like a security warning) ---- */
+  var dmRoot=document.getElementById('dm');
+  function showToast(msg){
+    var t=document.createElement('div'); t.className='dm-toast'; t.textContent=msg;
+    dmRoot.appendChild(t);
+    requestAnimationFrame(function(){t.classList.add('show')});
+    setTimeout(function(){t.classList.remove('show'); setTimeout(function(){t.remove()},300)},3200);
+  }
+  function showConfirm(msg,onYes){
+    var ov=document.createElement('div'); ov.className='dm-modal-overlay';
+    ov.innerHTML='<div class="dm-modal"><p></p><div class="dm-modal-btns">'
+      +'<button class="dm-btn" data-a="no">취소</button><button class="dm-btn main" data-a="yes">확인</button></div></div>';
+    ov.querySelector('p').textContent=msg;
+    dmRoot.appendChild(ov);
+    ov.addEventListener('click',function(e){
+      if(e.target===ov){ov.remove();return}
+      var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+      if(a==='yes'){ov.remove();onYes()} else if(a==='no'){ov.remove()}
+    });
+  }
+  function showLinkBox(url){
+    var ov=document.createElement('div'); ov.className='dm-modal-overlay';
+    ov.innerHTML='<div class="dm-modal"><p>아래 링크를 복사해서 전달하세요.</p>'
+      +'<input type="text" readonly><div class="dm-modal-btns">'
+      +'<button class="dm-btn" data-a="close">닫기</button><button class="dm-btn main" data-a="copy">복사하기</button></div></div>';
+    var inp=ov.querySelector('input'); inp.value=url;
+    dmRoot.appendChild(ov);
+    setTimeout(function(){inp.focus();inp.select()},50);
+    ov.addEventListener('click',function(e){
+      if(e.target===ov){ov.remove();return}
+      var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+      if(a==='copy'){
+        inp.focus(); inp.select(); inp.setSelectionRange(0,99999);
+        var ok=false; try{ok=document.execCommand('copy')}catch(err){}
+        if(ok){ov.remove(); showToast('링크가 복사되었습니다!')} else { showToast('자동 복사가 안 됐어요. 직접 선택해서 복사해 주세요.') }
+      } else if(a==='close'){ov.remove()}
+    });
+  }
+  function copyText(text,onDone){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){onDone(true)},function(){onDone(false)});
+    } else { onDone(false); }
+  }
 
   function urlOf(u){return u}
 
@@ -262,11 +314,14 @@
     items.splice(items.indexOf(it),1); select(null); markDirty();
   }
   $('dmDel').onclick=del;
-  $('dmClear').onclick=function(){
-    if(items.length&&!confirm('도안을 모두 지울까요?'))return;
+  function doClear(){
     pushHistory();
     items.forEach(function(it){if(els[it.id]&&els[it.id].parentNode)els[it.id].parentNode.removeChild(els[it.id])});
     items=[]; els={}; last=null; select(null); markDirty();
+  }
+  $('dmClear').onclick=function(){
+    if(!items.length)return;
+    showConfirm('도안을 모두 지울까요?',doClear);
   };
   $('dmGridShow').onchange=function(){stage.className='dm-stage'+(this.checked?' grid':'')+(paintMode?' paint-cursor':'')};
   $('dmNumbers').onchange=renderNumbers;
@@ -461,7 +516,7 @@
     setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   }
   $('dmSaveJson').onclick=function(){
-    if(!items.length){alert('먼저 기호를 추가해 주세요.');return}
+    if(!items.length){showToast('먼저 기호를 추가해 주세요.');return}
     downloadBlob(new Blob([JSON.stringify(currentState())],{type:'application/json'}),'도안.json');
   };
   $('dmLoadBtn').onclick=function(){$('dmLoadFile').click()};
@@ -470,15 +525,13 @@
     var reader=new FileReader();
     reader.onload=function(){
       try{ pushHistory(); applyState(JSON.parse(reader.result)); markDirty(); }
-      catch(e){ alert('파일을 읽지 못했습니다. 도안메이커에서 저장한 .json 파일인지 확인해 주세요.'); }
+      catch(e){ showToast('파일을 읽지 못했습니다. 도안메이커에서 저장한 .json 파일인지 확인해 주세요.'); }
     };
     reader.readAsText(f); this.value='';
   };
   $('dmShare').onclick=function(){
     var url=location.origin+location.pathname+'#d='+encodeURIComponent(JSON.stringify(currentState()));
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(function(){alert('공유 링크가 복사되었습니다! 붙여넣기(Ctrl+V)로 전달해 주세요.')},function(){window.prompt('아래 링크를 복사하세요:',url)});
-    } else { window.prompt('아래 링크를 복사하세요:',url); }
+    copyText(url,function(ok){ if(ok)showToast('공유 링크가 복사되었습니다!'); else showLinkBox(url); });
   };
 
   /* ---- responsive scale + zoom ---- */
@@ -588,20 +641,20 @@
     });
   }
   $('dmSave').onclick=function(){
-    if(!items.length){alert('먼저 기호를 추가해 주세요.');return}
+    if(!items.length){showToast('먼저 기호를 추가해 주세요.');return}
     buildExportCanvas().then(function(cv){
       cv.toBlob(function(b){downloadBlob(b,'도안.png')},'image/png');
-    }).catch(function(){alert('이미지를 저장하지 못했습니다. 기호 이미지 서버가 다른 사이트에서의 사용을 허용하지 않는 경우일 수 있습니다.')});
+    }).catch(function(){showToast('이미지를 저장하지 못했습니다. 기호 이미지 서버가 다른 사이트에서의 사용을 허용하지 않는 경우일 수 있습니다.')});
   };
   function ensureJsPDF(cb){
     if(window.jspdf&&window.jspdf.jsPDF){cb();return}
     var s=document.createElement('script');
     s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
-    s.onload=cb; s.onerror=function(){alert('PDF 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.')};
+    s.onload=cb; s.onerror=function(){showToast('PDF 기능을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.')};
     document.head.appendChild(s);
   }
   $('dmSavePdf').onclick=function(){
-    if(!items.length){alert('먼저 기호를 추가해 주세요.');return}
+    if(!items.length){showToast('먼저 기호를 추가해 주세요.');return}
     ensureJsPDF(function(){
       buildExportCanvas().then(function(cv){
         var jsPDF=window.jspdf.jsPDF;
@@ -612,7 +665,7 @@
         var w=cv.width*r, h=cv.height*r;
         pdf.addImage(cv.toDataURL('image/png'),'PNG',(pw-w)/2,(ph-h)/2,w,h);
         pdf.save('도안.pdf');
-      }).catch(function(){alert('PDF를 만들지 못했습니다.')});
+      }).catch(function(){showToast('PDF를 만들지 못했습니다.')});
     });
   };
 
